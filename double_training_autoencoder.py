@@ -5,6 +5,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import ruptures as rpt
 from matrixofseq import mat_of_seq as mos
 
 crd = os.path.dirname(os.path.realpath(__file__))
@@ -60,9 +61,9 @@ def dataoutput (dsname, foldername=None, dataset=None, **kwargs):
 # Item
 item = 109
 indatname = "x" + str(item)
-modelname = "ecglead2generalmodel"
+base_model = "ecglead2generalmodel"
 
-a320.model = a320.load(os.path.join(crd, modelname))
+a320.model = a320.load(os.path.join(crd, base_model))
 
 # Data
 filename = os.path.join("C:\D\FUSRP_RES\mitbih\MIT_BIH_dat", indatname)
@@ -130,11 +131,7 @@ pred_mat = a320.pred(tsds)
 pred_seq = mosds.mat_to_seq(pred_mat)
 plot(viewseq, mosds, pred_seq, err, SOI, text="M2")
 
-cutoff = 2
-clust_num = SOI > cutoff
-outlier_indices = np.argwhere(clust_num).reshape(-1)
-outlier_amount = outlier_indices.shape[0]
-print("outlier_amount=", outlier_amount)
+
 plt.figure()
 plt.hist(SOI, bins=1000)
 plt.xlabel("SOI")
@@ -142,3 +139,10 @@ plt.ylabel("Occurrance")
 plt.ylim(0, 12)
 plt.xlim(0, 20)
 plt.show()
+
+diff_seq = seq - pred_seq
+dataoutput("109.csv", diff_seq=diff_seq)
+
+#CPD = rpt.Pelt(model='rbf', min_size=360)
+#CPD.fit(diff_seq)
+#cpd_on_diff = CPD.predict(pen=35)
