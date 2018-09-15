@@ -22,8 +22,10 @@ def _run_once_for_each_object (func):
 
 class HBD(object):
 
-	def __init__ (self, *kwargs):
+	def __init__ (self, verbose=False, detection_type="direct", *kwargs):
 		# input
+		self.verbose = verbose
+		self.detection_type = detection_type
 		self.__dict__.update(kwargs)
 
 		# self initialization
@@ -40,7 +42,7 @@ class HBD(object):
 		self.personalized_training_process()
 		self.detection_process()
 
-	def predict (self, tol=None):
+	def predict (self):
 		return self.label_
 
 	@_run_once_for_each_object
@@ -56,4 +58,4 @@ class HBD(object):
 
 	@_run_once_for_each_object
 	def detection_process (self):
-		return
+		detection_labeling(self)

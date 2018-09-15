@@ -22,35 +22,42 @@ def sequence_segmentation (obj):
 	peaks = [max(range(r_start[i], r_end[i]), key=lambda x: seq[x]) for i in range(len(r_start))]
 	mosds = mos(seq, peaks)
 	obj.current_dat["mat320"] = mosds.seq_to_mat(320)
+	obj.current_dat["mosds"] = mosds
 
 
 def base_model_prediction (obj):
-	dsm = obj.current_dat["mat320"]
-	err = np.array([m1.evaluate(dsm[i:i + 1]) for i in range(dsm.shape[0])])
+	ds_seg = obj.current_dat["mat320"]
+	err = np.array([m1.evaluate(ds_seg[i:i + 1]) for i in range(ds_seg.shape[0])])
 
 	obj.current_dat["modl1"] = m1
-	obj.current_dat["diff1"] = dsm - m1.pred(dsm)
-	obj.current_dat["rank1"] = sorted(range(dsm.shape[0]), key=err.__getitem__)
+	obj.current_dat["diff1"] = ds_seg - m1.pred(ds_seg)
+	obj.current_dat["rank1"] = np.argsort(err)
 
 
-def personalized_model_training (obj, normal_num=300):
-	m2 = obj.current_dat["modl1"]
-	normal_entry = obj.current_dat["rank1"][:normal_num]
-	tsds = obj.current_dat["mat320"]
-	trds = tsds[normal_entry, :]
-	ptserr = 1
-	for j in range(3):
-		print("iteration ", j)
-		trerr = m2.fit(trds)
-		print("training error: ", trerr)
-		tserr = m2.evaluate(tsds)
-		print("test error: ", tserr)
-		if ptserr < tserr:
-			break
-		else:
-			ptserr = tserr
+def personalized_model_training (obj):
+	obj.pmodle = 'pca'
+	normal_entry = obj.current_dat["rank1"][:320]
+	trds = obj.current_dat["mat320"][normal_entry, :]
+	if obj.pmodle == 'nn':
+		m2 = obj.current_dat["modl1"]
+		m2.fit(trds, epochs=240, verbose=obj.verbose)
+	else:
+		from sklearn.decomposition import PCA
+
+		def temp_pred (obj, ds):
+			return obj.inverse_transform(obj.transform(ds))
+
+		def temp_eval (obj, ds):
+			diff = ds - temp_pred(obj, ds)
+			return (diff * diff).sum(axis=1)
+
+		PCA.pred = temp_pred
+		PCA.evaluate = temp_eval
+
+		m2 = PCA(n_components=10)
+		m2.fit(trds)
+
 	obj.current_dat["modl2"] = m2
-	obj.current_dat["modl1"].load(input_model_name)
 
 
 def personalized_model_detection (obj):
@@ -59,4 +66,18 @@ def personalized_model_detection (obj):
 	err = np.array([m2.evaluate(dsm[i:i + 1]) for i in range(dsm.shape[0])])
 
 	obj.current_dat["diff2"] = dsm - m2.pred(dsm)
-	obj.current_dat["rank2"] = sorted(range(dsm.shape[0]), key=err.__getitem__)
+	obj.current_dat["rank2"] = np.argsort(err)
+	obj.current_dat["err"] = err
+
+
+def detection_labeling (obj):
+	mosds = obj.current_dat["mosds"]
+	err = obj.current_dat["err"]
+	if obj.detection_type == "direct":
+		pw_label = err
+	elif obj.detection_type == "probability":
+		pw_label = np.exp(-err / err.mean() / 2)
+	else:
+		pw_label = err
+
+	obj.label_ = mosds.mat_to_seq(pw_label)

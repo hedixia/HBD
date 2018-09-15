@@ -1,5 +1,5 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 
 class ModelGenerator:
@@ -46,12 +46,12 @@ class ModelGenerator:
 		for i in args:
 			self.add_layer(i, syntax=syntax)
 
-	def fit (self, tr_set, verbose=False, loss='MSE'):
+	def fit (self, tr_set, epochs=5, verbose=False, loss='MSE'):
 		if not self.compiled:
 			self.model.compile(optimizer='adam', loss=loss)
 			self.compiled = True
 		tr_set = tr_set.reshape(-1, *self.formatted_input_size)
-		self.model.fit(tr_set, tr_set, epochs=5, verbose=verbose, steps_per_epoch=100)
+		self.model.fit(tr_set, tr_set, epochs=epochs, verbose=verbose)
 		error_rate = self.model.evaluate(tr_set, tr_set, verbose=verbose)
 		if verbose:
 			print("error_rate = ", error_rate)
