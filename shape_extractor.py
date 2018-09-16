@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class mat_of_seq:
+class Shape_Extractor:
 	def __init__ (self, seq, intrim_cutoff):
 		self.seq = np.asarray(seq)
 		self.n_point = len(seq)

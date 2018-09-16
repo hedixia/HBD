@@ -22,9 +22,10 @@ def _run_once_for_each_object (func):
 
 class HBD(object):
 
-	def __init__ (self, verbose=False, detection_type="direct", *kwargs):
+	def __init__ (self, verbose=False, model_type='nn', detection_type="direct", *kwargs):
 		# input
 		self.verbose = verbose
+		self.model_type = model_type
 		self.detection_type = detection_type
 		self.__dict__.update(kwargs)
 

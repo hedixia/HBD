@@ -6,7 +6,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import ruptures as rpt
-from matrixofseq import mat_of_seq as mos
+from shape_extractor import Shape_Extractor as mos
 
 crd = os.path.dirname(os.path.realpath(__file__))
 viewseq = [2305, 2300, 2248, 2000]
