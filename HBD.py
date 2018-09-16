@@ -22,7 +22,14 @@ def _run_once_for_each_object (func):
 
 class HBD(object):
 
-	def __init__ (self, verbose=False, model_type='nn', detection_type="direct", *kwargs):
+	def __init__ (self, verbose=False, model_type='pca', detection_type="SSE", *kwargs):
+		"""
+		Create a HBD object
+		:param verbose: Show processes if Neural Network is used
+		:param model_type: Model for Personalized Training Process, default to pca
+		:param detection_type: Output of detection. Default to error sums of squares (SSE)
+		:param kwargs:
+		"""
 		# input
 		self.verbose = verbose
 		self.model_type = model_type

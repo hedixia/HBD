@@ -97,15 +97,18 @@ def personalized_model_detection (obj):
 	obj.current_dat["diff_2"] = dsm - model_2.pred(dsm)
 	obj.current_dat["rank_2"] = np.argsort(err)
 	obj.current_dat["err"] = err
+	obj.current_dat["diff_seq"] = obj.current_dat["shape_extractor_"].mat_to_seq(obj.current_dat["diff_2"])
 
 
 def detection_labeling (obj):
 	shape_extractor_ = obj.current_dat["shape_extractor_"]
 	err = obj.current_dat["err"]
-	if obj.detection_type == "direct":
+	if obj.detection_type == "SSE":
 		pw_label = err
 	elif obj.detection_type == "prob":
 		pw_label = np.exp(-err / err.mean() / 2)
+	elif obj.detection_type == "diff":
+		pw_label = obj.current_dat["diff_2"]
 	else:
 		pw_label = err
 
