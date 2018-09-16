@@ -27,7 +27,7 @@ class HBD(object):
 		Create a HBD object
 		:param verbose: Show processes if Neural Network is used
 		:param model_type: Model for Personalized Training Process, default to pca
-		:param detection_type: Output of detection. Default to error sums of squares (SSE)
+		:param detection_type: Output of detection. Default to error sums of squares (SSE), choice includes diff, prob
 		:param kwargs:
 		"""
 		# input
@@ -50,8 +50,13 @@ class HBD(object):
 		self.personalized_training_process()
 		self.detection_process()
 
-	def predict (self):
-		return self.label_
+	def predict (self, model_type=None):
+		if model_type is None:
+			return self.label_
+		else:
+			self.model_type = model_type
+			detection_labeling(self)
+			return self.label_
 
 	@_run_once_for_each_object
 	def segmentation_process (self):
