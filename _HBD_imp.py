@@ -12,11 +12,22 @@ model_1.model = model_1.load(input_model_name)
 
 
 def sequence_denoising (obj):
+	"""
+	Denoising sequence of floats, stores the denoised sequence in obj.current_dat["denoised_sequence"]
+	:param obj: a HBD object, has obj.current_dat["initial_sequence"]
+	:return: None
+	"""
+	obj.current_dat["denoised_sequence"] = obj.current_dat["initial_sequence"]
 	return
 
 
 def sequence_segmentation (obj):
-	seq = obj.current_dat["initial_sequence"]
+	"""
+	Segment sequence of floats, storing shape into obj.current_dat["shape_320"]
+	:param obj: a HBD object, has obj.current_dat["denoised_sequence"]
+	:return: None
+	"""
+	seq = obj.current_dat["denoised_sequence"]
 	act = np.asarray(np.insert(seq, [0, -1], 0) > 1, dtype=int)
 	act = np.diff(np.asarray(act[:-2] + act[1:-1] + act[2:] > 2.5, dtype=int))
 	r_start = np.where(act == 1)[0]
@@ -28,15 +39,26 @@ def sequence_segmentation (obj):
 
 
 def base_model_prediction (obj):
-	ds_seg = obj.current_dat["shape_320"]
-	err = np.array([model_1.evaluate(ds_seg[i:i + 1]) for i in range(ds_seg.shape[0])])
+	"""
+	Calculate the difference between the shape and its projection on the manifold created by the first model.
+	Ranking is stored in obj.current_dat["rank_1"]
+	:param obj: a HBD object, has obj.current_dat["shape_320"]
+	:return: None
+	"""
+	HB_shapes = obj.current_dat["shape_320"]
+	err = np.array([model_1.evaluate(HB_shapes[i:i + 1]) for i in range(HB_shapes.shape[0])])
 
 	obj.current_dat["model_1"] = model_1
-	obj.current_dat["diff_1"] = ds_seg - model_1.pred(ds_seg)
+	obj.current_dat["diff_1"] = HB_shapes - model_1.pred(HB_shapes)
 	obj.current_dat["rank_1"] = np.argsort(err)
 
 
 def personalized_model_training (obj):
+	"""
+	Train personalized model. Model is stored in obj.current_dat["model_2"]
+	:param obj: a HBD object, has obj.current_dat["rank_1"], obj.current_dat["model_1"]
+	:return: None
+	"""
 	normal_entry = obj.current_dat["rank_1"][:320]
 	trds = obj.current_dat["shape_320"][normal_entry, :]
 	if obj.model_type == 'nn':
@@ -62,6 +84,12 @@ def personalized_model_training (obj):
 
 
 def personalized_model_detection (obj):
+	"""
+	Calculate the difference between the shape and its projection on the manifold created by the personalized model.
+	Ranking is stored in obj.current_dat["rank_2"], error is stored in obj.current_dat["err"]
+	:param obj: a HBD object, has obj.current_dat["shape_320"], obj.current_dat["model_2"]
+	:return: None
+	"""
 	dsm = obj.current_dat["shape_320"]
 	model_2 = obj.current_dat["model_2"]
 	err = np.array([model_2.evaluate(dsm[i:i + 1]) for i in range(dsm.shape[0])])
@@ -72,7 +100,7 @@ def personalized_model_detection (obj):
 
 
 def detection_labeling (obj):
-	mosds = obj.current_dat["mosds"]
+	shape_extractor_ = obj.current_dat["shape_extractor_"]
 	err = obj.current_dat["err"]
 	if obj.detection_type == "direct":
 		pw_label = err
@@ -81,4 +109,4 @@ def detection_labeling (obj):
 	else:
 		pw_label = err
 
-	obj.label_ = mosds.mat_to_seq(pw_label)
+	obj.label_ = shape_extractor_.mat_to_seq(pw_label)
