@@ -5,8 +5,9 @@ import numpy as np
 import os
 
 time_list.append(time.time())
+crd = os.path.dirname(os.path.realpath(__file__))
 
-filename = os.path.join("C:\D\FUSRP_RES\mitbih\MIT_BIH_dat", 'x109')
+filename = os.path.join(crd, 'x109')
 dataset = np.genfromtxt(filename, delimiter=",")
 wave = dataset[0]
 
